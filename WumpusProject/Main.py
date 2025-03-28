@@ -1,11 +1,14 @@
 import os
 import random
+from re import S
 
 class Caverna:
     def __init__(self, tamanho):
         self.tamanho = tamanho
         self.mapa = [['[ ]' for _ in range(tamanho)] for _ in range(tamanho)]
         self.itens = self.gerar_itens()
+        self.wumpus = self.gerar_wumpus()
+        self.abismos = self.gerar_abismos() #Não está funcionando
 
     def gerar_itens(self):
         # Gerar 3 itens em posições aleatórias
@@ -18,6 +21,25 @@ class Caverna:
                     self.mapa[x][y] = "[*]"  # Representação do item
                     break
         return itens
+
+    def gerar_wumpus(self):
+            while True:
+                wumpus_pos = (random.randint(0, self.tamanho - 1), random.randint(0,self.tamanho - 1))
+                if wumpus_pos not in self.itens:
+                     self.mapa[wumpus_pos[0]][wumpus_pos[1]] = "[W]"
+                return wumpus_pos
+
+    def gerar_abismos(self, num_wumpus): #Não está gerando 
+            abismos= []
+            for _ in range (num_wumpus):
+                while True:
+                    abismos_pos = (random.randint(0, self.tamanho - 1), random.randint(0, self.tamanho - 1))
+                    if abismos_pos not in abismos and abismos_pos not in self.wumpus:
+                        abismos.append(abismos_pos)
+                    self.mapa[abismos_pos[0]][abismos_pos[1]] = "[A]"
+                    break
+            return abismos
+
 
     def exibir(self, playerPosition):
         for i in range(self.tamanho):
@@ -77,17 +99,17 @@ class NovoJogo:
     def exe(self):
         ex = self.dificuldade[self.dif]
         if ex == "Facíl(4x4)":
-            self.caverna = Caverna(4)
+            self.caverna = Caverna(4, 1 , 1)
             self.posicao = (0, 0)
         elif ex == "Normal(6x6)":
-            self.caverna = Caverna(6)
+            self.caverna = Caverna(6, 1 , 2)
             self.posicao = (0, 0)
         elif ex == "Dificil(10x10)":
-            self.caverna = Caverna(10)
+            self.caverna = Caverna(10, 2 , 5)
             self.posicao = (0, 0)
         else:
             print("Dificuldade inválida! Usando 'normal' por padrão.")
-            self.caverna = Caverna(6)
+            self.caverna = Caverna(6, 1 ,2)
             self.posicao = (0, 0)
 
     def cadastro(self):
@@ -127,6 +149,11 @@ class NovoJogo:
             y += 1
 
         self.posicao = (x, y)
+        #Não está fucionando
+        if self.posicao in self.caverna.abismos:
+            print("Você caiu em um abismo! Jogo terminado.")
+            self.ranking.addPontos(self.nome, self.pontuacao)
+            exit()
 
         # Verifica se o jogador coletou um item
         if self.posicao in self.caverna.itens:
