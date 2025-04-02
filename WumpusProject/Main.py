@@ -3,14 +3,15 @@ import random
 from re import S
 
 class Caverna:
-    def __init__(self, tamanho):
+    def __init__(self, tamanho, num_wumpus, num_abismos):
         self.tamanho = tamanho
         self.mapa = [['[ ]' for _ in range(tamanho)] for _ in range(tamanho)]
         self.itens = self.gerar_itens()
         self.wumpus = self.gerar_wumpus()
-        self.abismos = self.gerar_abismos() #Não está funcionando
+        self.abismos = self.gerar_abismos(num_abismos)  # Corrigido para usar num_abismos
 
     def gerar_itens(self):
+        
         # Gerar 3 itens em posições aleatórias
         itens = []
         for _ in range(3):
@@ -29,15 +30,15 @@ class Caverna:
                      self.mapa[wumpus_pos[0]][wumpus_pos[1]] = "[W]"
                 return wumpus_pos
 
-    def gerar_abismos(self, num_wumpus): #Não está gerando 
-            abismos= []
-            for _ in range (num_wumpus):
+    def gerar_abismos(self, num_abismos):  # Corrigido para aceitar num_abismos
+            abismos = []
+            for _ in range(num_abismos):  # Geração de abismos baseada em num_abismos
                 while True:
                     abismos_pos = (random.randint(0, self.tamanho - 1), random.randint(0, self.tamanho - 1))
-                    if abismos_pos not in abismos and abismos_pos not in self.wumpus:
+                    if abismos_pos not in abismos and abismos_pos not in self.wumpus and abismos_pos not in self.itens:
                         abismos.append(abismos_pos)
-                    self.mapa[abismos_pos[0]][abismos_pos[1]] = "[A]"
-                    break
+                        self.mapa[abismos_pos[0]][abismos_pos[1]] = "[A]"
+                        break  # Quebra quando um abismo é gerado corretamente
             return abismos
 
 
@@ -49,7 +50,6 @@ class Caverna:
                 else:
                     print(self.mapa[i][j], end=" ")
             print()
-
 
 class Pontos:
     def __init__(self):
@@ -67,6 +67,7 @@ class Pontos:
             print("Ranking dos Melhores Jogadores:")
             for i, jogador in enumerate(self.pontos, 1):
                 print(f"{i}. {jogador['nome']} - {jogador['pontos']} pontos")
+
 
 
 class NovoJogo:
@@ -99,17 +100,17 @@ class NovoJogo:
     def exe(self):
         ex = self.dificuldade[self.dif]
         if ex == "Facíl(4x4)":
-            self.caverna = Caverna(4, 1 , 1)
+            self.caverna = Caverna(4, 1 , 1)  # Corrigido: Adicionando o número de abismos
             self.posicao = (0, 0)
         elif ex == "Normal(6x6)":
-            self.caverna = Caverna(6, 1 , 2)
+            self.caverna = Caverna(6, 1 , 2)  # Corrigido: Adicionando o número de abismos
             self.posicao = (0, 0)
         elif ex == "Dificil(10x10)":
-            self.caverna = Caverna(10, 2 , 5)
+            self.caverna = Caverna(10, 2 , 5)  # Corrigido: Adicionando o número de abismos
             self.posicao = (0, 0)
         else:
             print("Dificuldade inválida! Usando 'normal' por padrão.")
-            self.caverna = Caverna(6, 1 ,2)
+            self.caverna = Caverna(6, 1 , 2)  # Corrigido: Adicionando o número de abismos
             self.posicao = (0, 0)
 
     def cadastro(self):
@@ -149,7 +150,8 @@ class NovoJogo:
             y += 1
 
         self.posicao = (x, y)
-        #Não está fucionando
+        
+        # Verifica se o jogador caiu em um abismo
         if self.posicao in self.caverna.abismos:
             print("Você caiu em um abismo! Jogo terminado.")
             self.ranking.addPontos(self.nome, self.pontuacao)
@@ -162,48 +164,47 @@ class NovoJogo:
             self.caverna.mapa[x][y] = '[ ]'  # Remove a representação do item no mapa
             print(f"Você coletou um item! Pontuação: {self.pontuacao}")
 
-
 class menuInicial:
-    def __init__(self):
-        self.menu = ["Novo Jogo", "Ranking", "Sair"]
-        self.linha = 0
-        self.pontos = Pontos()
+        def __init__(self):
+            self.menu = ["Novo Jogo", "Ranking", "Sair"]
+            self.linha = 0
+            self.pontos = Pontos()
 
-    def exibirMenu(self):
-        print("MENU PRINCIPAL")
-        for i, v in enumerate(self.menu):
-            if i == self.linha:
-                print(f"> {v} <")
-            else:
-                print(f"  {v}")
+        def exibirMenu(self):
+            print("MENU PRINCIPAL")
+            for i, v in enumerate(self.menu):
+                if i == self.linha:
+                    print(f"> {v} <")
+                else:
+                    print(f"  {v}")
 
-    def escolha(self):
-        escolha = input("escolha uma ação(W/S): \n").upper()
-        if escolha == "W" and self.linha > 0:
-            self.linha -= 1
-        elif escolha == "S" and self.linha < len(self.menu) - 1:
-            self.linha += 1
-        elif escolha == "":
-            self.executa()
+        def escolha(self):
+            escolha = input("escolha uma ação(W/S): \n").upper()
+            if escolha == "W" and self.linha > 0:
+                self.linha -= 1
+            elif escolha == "S" and self.linha < len(self.menu) - 1:
+                self.linha += 1
+            elif escolha == "":
+                self.executa()
 
-    def executa(self):
-        op = self.menu[self.linha]
-        if op == "Sair":
-            print("saindo...\n")
-            exit()
-        elif op == "Ranking":
-            self.pontos.mostraPontos()
-            input("Pressione Enter para voltar ao menu...")
-        elif op == "Novo Jogo":
-            nwgame = NovoJogo(self.pontos)  # Passa o ranking para o novo jogo
-            nwgame.cadastro()
+        def executa(self):
+            op = self.menu[self.linha]
+            if op == "Sair":
+                print("saindo...\n")
+                exit()
+            elif op == "Ranking":
+                self.pontos.mostraPontos()
+                input("Pressione Enter para voltar ao menu...")
+            elif op == "Novo Jogo":
+                nwgame = NovoJogo(self.pontos)  # Passa o ranking para o novo jogo
+                nwgame.cadastro()
 
-    def run(self):
-        while True:
-            os.system('cls')
-            print()
-            self.exibirMenu()
-            self.escolha()
+        def run(self):
+            while True:
+                os.system('cls')
+                print()
+                self.exibirMenu()
+                self.escolha()
 
 
 if __name__ == "__main__":
